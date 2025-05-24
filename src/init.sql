@@ -12,7 +12,9 @@ CREATE TABLE IF NOT EXISTS registrations (
     phone VARCHAR(50),
     photo VARCHAR(255),
     status ENUM('Pending','Approved','Rejected') DEFAULT 'Pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_status (status),
+    INDEX idx_created_at (created_at)
 );
 
 CREATE TABLE IF NOT EXISTS admin_users (
@@ -26,7 +28,7 @@ DELETE FROM admin_users WHERE username = 'admin';
 
 -- Then insert the admin user with the new password hash
 INSERT INTO admin_users (username, password) VALUES 
-('admin', '$2y$10$YEz3UmB6gRFyQwrNUIhkBOK0iuXhZjA3V6ww3ob84yDK72VquF7vy'); -- password: admin123
+('admin', '$2y$10$fRBDhqVzO5uqaV6B62AwIe.qQeYHmagngz.vDAjNpy23ZSKX1mISa'); -- password: admin123
 
 CREATE TABLE IF NOT EXISTS registration_comments (
     id INT AUTO_INCREMENT PRIMARY KEY,

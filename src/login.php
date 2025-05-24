@@ -49,46 +49,117 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Admin Login</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        body { background: linear-gradient(135deg, #6f86d6 0%, #48c6ef 100%); min-height: 100vh;}
-        .card { margin-top: 65px; box-shadow: 0 8px 32px 0 rgba( 31, 38, 135, 0.18 ); }
-    </style>
-</head>
-<body>
+<?php 
+$title = "Admin Login";
+require 'includes/header.php';
+?>
+
+<style>
+    .login-card {
+        max-width: 400px;
+        margin: 2rem auto;
+    }
+    
+    .login-header {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+        margin: -1.5rem -1.5rem 1.5rem;
+        border-radius: 15px 15px 0 0;
+    }
+    
+    .login-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .form-floating {
+        margin-bottom: 1rem;
+    }
+    
+    .error-shake {
+        animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    
+    @keyframes shake {
+        10%, 90% { transform: translate3d(-1px, 0, 0); }
+        20%, 80% { transform: translate3d(2px, 0, 0); }
+        30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+        40%, 60% { transform: translate3d(4px, 0, 0); }
+    }
+    
+    @media (max-width: 576px) {
+        .login-card {
+            margin: 1rem;
+        }
+        
+        .login-header {
+            padding: 1.5rem;
+        }
+    }
+</style>
+
 <div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card p-4">
-                <div class="card-header bg-primary text-white text-center rounded-3">
-                    <h2>
-                        <i class="bi bi-shield-lock"></i> Admin Logindd
-                    </h2>
+        <div class="col-12">
+            <div class="card login-card p-4 animate__animated animate__fadeInDown">
+                <div class="login-header">
+                    <i class="bi bi-shield-lock login-icon"></i>
+                    <h2 class="mb-0">Admin Login</h2>
                 </div>
-                <div class="card-body">
-                    <?php if ($error) echo "<div class='alert alert-danger'>$error</div>"; ?>
-                    <form method="POST">
-                        <label class="form-label">Username</label>
-                        <input type="text" name="username" required class="form-control mb-3">
-                        <label class="form-label">Password</label>
-                        <input type="password" name="password" required class="form-control mb-4">
-                        <button type="submit" class="btn btn-primary w-100">
+                
+                <?php if ($error): ?>
+                <div class="alert alert-danger alert-dismissible fade show error-shake" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill"></i> <?php echo $error; ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <?php endif; ?>
+                
+                <form method="POST" class="needs-validation" novalidate>
+                    <div class="form-floating mb-3">
+                        <input type="text" 
+                               name="username" 
+                               class="form-control" 
+                               id="username" 
+                               placeholder="Username"
+                               required 
+                               autofocus>
+                        <label for="username">
+                            <i class="bi bi-person"></i> Username
+                        </label>
+                        <div class="invalid-feedback">
+                            Please enter your username
+                        </div>
+                    </div>
+                    
+                    <div class="form-floating mb-4">
+                        <input type="password" 
+                               name="password" 
+                               class="form-control" 
+                               id="password" 
+                               placeholder="Password"
+                               required>
+                        <label for="password">
+                            <i class="bi bi-key"></i> Password
+                        </label>
+                        <div class="invalid-feedback">
+                            Please enter your password
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
                             <i class="bi bi-box-arrow-in-right"></i> Login
                         </button>
-                    </form>
-                    <p class="text-center mt-3">
-                        <a href="index.php" class="btn btn-link"><i class="bi bi-house"></i> Back to Registration</a>
-                    </p>
-                </div>
+                        <a href="index.php" class="btn btn-link text-decoration-none">
+                            <i class="bi bi-house"></i> Back to Registration
+                        </a>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
-</body>
-</html>
+
+<?php require 'includes/footer.php'; ?>

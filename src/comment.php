@@ -19,24 +19,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     if ($stmt->execute()) {
-        // Return the updated comments list along with the input form
+        // Return the updated comments list
         $res = $conn->prepare("SELECT id, comment, created_at FROM registration_comments WHERE registration_id=? ORDER BY created_at DESC");
         $res->bind_param("i", $reg_id);
         $res->execute();
         $result = $res->get_result();
         
         echo "<div class='comment-list'>";
+        $count = 0;
         while ($row = $result->fetch_assoc()) {
-            echo "<div class='alert alert-secondary mb-1 py-2 px-3 d-flex justify-content-between align-items-start'>";
-            echo "<div><b>[{$row['created_at']}]</b> " . htmlspecialchars($row['comment']) . "</div>";
-            echo "<div class='btn-group btn-group-sm'>";
-            echo "<button onclick='editComment({$reg_id}, {$row['id']}, `" . htmlspecialchars(addslashes($row['comment'])) . "`)' class='btn btn-outline-primary btn-sm'><i class='bi bi-pencil'></i></button>";
+            $count++;
+            echo "<div class='comment-item mb-2'>";
+            echo "<div class='d-flex justify-content-between align-items-start'>";
+            echo "<div class='comment-content'>";
+            echo "<div class='text-muted small mb-1'>" . date('M j, Y g:i A', strtotime($row['created_at'])) . "</div>";
+            echo "<div>" . nl2br(htmlspecialchars($row['comment'])) . "</div>";
+            echo "</div>";
+            echo "<button onclick='editComment({$reg_id}, {$row['id']}, `" . htmlspecialchars(addslashes($row['comment'])) . "`)' 
+                    class='btn btn-link btn-sm text-muted p-0 ms-2'>
+                    <i class='bi bi-pencil'></i>
+                </button>";
             echo "</div>";
             echo "</div>";
         }
         echo "</div>";
-        echo "<textarea id='comment-input-$reg_id' rows='2' placeholder='Add comment...' class='form-control mb-2'></textarea>";
-        echo "<button onclick='addComment($reg_id)' class='btn btn-primary btn-sm mb-2'><i class='bi bi-plus-circle'></i> Add</button>";
+        echo "<script>document.getElementById('comment-count').textContent = '{$count}';</script>";
         $res->close();
     } else {
         echo "error";
@@ -59,16 +66,24 @@ $res->execute();
 $result = $res->get_result();
 
 echo "<div class='comment-list'>";
+$count = 0;
 while ($row = $result->fetch_assoc()) {
-    echo "<div class='alert alert-secondary mb-1 py-2 px-3 d-flex justify-content-between align-items-start'>";
-    echo "<div><b>[{$row['created_at']}]</b> " . htmlspecialchars($row['comment']) . "</div>";
-    echo "<div class='btn-group btn-group-sm'>";
-    echo "<button onclick='editComment({$reg_id}, {$row['id']}, `" . htmlspecialchars(addslashes($row['comment'])) . "`)' class='btn btn-outline-primary btn-sm'><i class='bi bi-pencil'></i></button>";
+    $count++;
+    echo "<div class='comment-item mb-2'>";
+    echo "<div class='d-flex justify-content-between align-items-start'>";
+    echo "<div class='comment-content'>";
+    echo "<div class='text-muted small mb-1'>" . date('M j, Y g:i A', strtotime($row['created_at'])) . "</div>";
+    echo "<div>" . nl2br(htmlspecialchars($row['comment'])) . "</div>";
+    echo "</div>";
+    echo "<button onclick='editComment({$reg_id}, {$row['id']}, `" . htmlspecialchars(addslashes($row['comment'])) . "`)' 
+              class='btn btn-link btn-sm text-muted p-0 ms-2'>
+              <i class='bi bi-pencil'></i>
+          </button>";
     echo "</div>";
     echo "</div>";
 }
 echo "</div>";
-echo "<textarea id='comment-input-$reg_id' rows='2' placeholder='Add comment...' class='form-control mb-2'></textarea>";
-echo "<button onclick='addComment($reg_id)' class='btn btn-primary btn-sm mb-2'><i class='bi bi-plus-circle'></i> Add</button>";
+echo "<script>document.getElementById('comment-count').textContent = '{$count}';</script>";
+echo "</div>";
 $res->close();
 ?>

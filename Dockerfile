@@ -28,10 +28,16 @@ RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini" && \
     echo "display_startup_errors=1" >> "$PHP_INI_DIR/php.ini"
 
 # Enable Apache modules
-RUN a2enmod rewrite headers
+RUN a2enmod rewrite headers expires deflate
 
-# Configure PHP
+# Configure Apache and PHP for performance
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
+    && echo "opcache.enable=1" >> "$PHP_INI_DIR/php.ini" \
+    && echo "opcache.memory_consumption=128" >> "$PHP_INI_DIR/php.ini" \
+    && echo "opcache.interned_strings_buffer=8" >> "$PHP_INI_DIR/php.ini" \
+    && echo "opcache.max_accelerated_files=4000" >> "$PHP_INI_DIR/php.ini" \
+    && echo "opcache.revalidate_freq=60" >> "$PHP_INI_DIR/php.ini" \
+    && echo "opcache.fast_shutdown=1" >> "$PHP_INI_DIR/php.ini" \
     && sed -i 's/upload_max_filesize = 2M/upload_max_filesize = 10M/' "$PHP_INI_DIR/php.ini" \
     && sed -i 's/post_max_size = 8M/post_max_size = 10M/' "$PHP_INI_DIR/php.ini" \
     && sed -i 's/memory_limit = 128M/memory_limit = 256M/' "$PHP_INI_DIR/php.ini"
