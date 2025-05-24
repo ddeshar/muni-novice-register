@@ -1,41 +1,41 @@
 <?php
-    session_start();
-    require 'db.php';
-    if (!isset($_SESSION['admin'])) {
-        header("Location: login.php");
-        exit;
-    }
+session_start();
+require 'db.php';
+if (!isset($_SESSION['admin'])) {
+    header("Location: login.php");
+    exit;
+}
 
-    // Status update
-    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_status'])) {
-        $rid = intval($_POST['reg_id']);
-        $status = $_POST['status'];
-        $stmt = $conn->prepare("UPDATE registrations SET status=? WHERE id=?");
-        $stmt->bind_param("si", $status, $rid);
-        $stmt->execute();
-        $stmt->close();
-    }
+// Status update
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_status'])) {
+    $rid = intval($_POST['reg_id']);
+    $status = $_POST['status'];
+    $stmt = $conn->prepare("UPDATE registrations SET status=? WHERE id=?");
+    $stmt->bind_param("si", $status, $rid);
+    $stmt->execute();
+    $stmt->close();
+}
 
-    // Dashboard info
-    $total = $conn->query("SELECT COUNT(*) FROM registrations")->fetch_row()[0];
-    $pending = $conn->query("SELECT COUNT(*) FROM registrations WHERE status='Pending'")->fetch_row()[0];
-    $approved = $conn->query("SELECT COUNT(*) FROM registrations WHERE status='Approved'")->fetch_row()[0];
-    $rejected = $conn->query("SELECT COUNT(*) FROM registrations WHERE status='Rejected'")->fetch_row()[0];
+// Dashboard info
+$total = $conn->query("SELECT COUNT(*) FROM registrations")->fetch_row()[0];
+$pending = $conn->query("SELECT COUNT(*) FROM registrations WHERE status='Pending'")->fetch_row()[0];
+$approved = $conn->query("SELECT COUNT(*) FROM registrations WHERE status='Approved'")->fetch_row()[0];
+$rejected = $conn->query("SELECT COUNT(*) FROM registrations WHERE status='Rejected'")->fetch_row()[0];
 
-    // Pagination setup
-    $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-    $per_page = 10;
-    $offset = ($page - 1) * $per_page;
+// Pagination setup
+$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+$per_page = 10;
+$offset = ($page - 1) * $per_page;
 
-    // Get total count for pagination
-    $total_records = $conn->query("SELECT COUNT(*) FROM registrations")->fetch_row()[0];
-    $total_pages = ceil($total_records / $per_page);
+// Get total count for pagination
+$total_records = $conn->query("SELECT COUNT(*) FROM registrations")->fetch_row()[0];
+$total_pages = ceil($total_records / $per_page);
 
-    // List registrations with pagination
-    $res = $conn->prepare("SELECT * FROM registrations ORDER BY created_at DESC LIMIT ? OFFSET ?");
-    $res->bind_param("ii", $per_page, $offset);
-    $res->execute();
-    $res = $res->get_result();
+// List registrations with pagination
+$res = $conn->prepare("SELECT * FROM registrations ORDER BY created_at DESC LIMIT ? OFFSET ?");
+$res->bind_param("ii", $per_page, $offset);
+$res->execute();
+$res = $res->get_result();
 
 $title = "Admin Dashboard";
 require 'includes/header.php';
@@ -53,30 +53,31 @@ require 'includes/header.php';
         transform: translateZ(0);
         will-change: transform;
     }
-    
+
     .stats-card .card-body {
         padding: 1.5rem;
         position: relative;
         z-index: 2;
     }
-      .stats-card:hover {
+
+    .stats-card:hover {
         transform: translateY(-2px) translateZ(0);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
     }
-    
+
     @media (hover: hover) {
         .stats-card:active {
             transform: translateY(0) translateZ(0);
         }
     }
-    
+
     @media (hover: none) {
         .stats-card:hover {
             transform: none;
             box-shadow: none;
         }
     }
-    
+
     .stats-icon-wrapper {
         width: 52px;
         height: 52px;
@@ -88,7 +89,7 @@ require 'includes/header.php';
         transition: all 0.3s ease;
         position: relative;
     }
-    
+
     .stats-icon-wrapper::before {
         content: '';
         position: absolute;
@@ -97,62 +98,87 @@ require 'includes/header.php';
         opacity: 0.2;
         transition: all 0.3s ease;
     }
-    
+
     .stats-card:hover .stats-icon-wrapper::before {
         opacity: 0.3;
         transform: scale(1.05);
     }
-    
-    .total-stats .stats-icon-wrapper::before { background: var(--primary); }
-    .pending-stats .stats-icon-wrapper::before { background: var(--warning); }
-    .approved-stats .stats-icon-wrapper::before { background: var(--success); }
-    .rejected-stats .stats-icon-wrapper::before { background: var(--danger); }
-    
-    .total-stats .stats-icon-wrapper i { color: var(--primary); }
-    .pending-stats .stats-icon-wrapper i { color: var(--warning); }
-    .approved-stats .stats-icon-wrapper i { color: var(--success); }
-    .rejected-stats .stats-icon-wrapper i { color: var(--danger); }
-    
+
+    .total-stats .stats-icon-wrapper::before {
+        background: var(--primary);
+    }
+
+    .pending-stats .stats-icon-wrapper::before {
+        background: var(--warning);
+    }
+
+    .approved-stats .stats-icon-wrapper::before {
+        background: var(--success);
+    }
+
+    .rejected-stats .stats-icon-wrapper::before {
+        background: var(--danger);
+    }
+
+    .total-stats .stats-icon-wrapper i {
+        color: var(--primary);
+    }
+
+    .pending-stats .stats-icon-wrapper i {
+        color: var(--warning);
+    }
+
+    .approved-stats .stats-icon-wrapper i {
+        color: var(--success);
+    }
+
+    .rejected-stats .stats-icon-wrapper i {
+        color: var(--danger);
+    }
+
     .stats-number {
         font-size: 1.75rem;
         font-weight: 700;
         line-height: 1.2;
         margin-bottom: 0.25rem;
     }
-    
+
     .stats-title {
         font-size: 0.875rem;
         color: var(--text-muted);
         margin: 0;
     }
-      .stats-progress {
+
+    .stats-progress {
         height: 4px;
         border-radius: 2px;
         margin-top: 1rem;
-        background: rgba(0,0,0,0.05);
+        background: rgba(0, 0, 0, 0.05);
         overflow: hidden;
         transition: transform 0.3s ease;
     }
-    
+
     .stats-card:hover .stats-progress {
         transform: scaleY(1.2);
     }
-    
+
     .stats-progress-bar {
         transition: width 0.6s ease, transform 0.3s ease;
     }
-    
+
     @media (hover: none) {
         .stats-card:hover .stats-progress {
             transform: none;
         }
     }
-    
+
     .stats-progress-bar {
         height: 100%;
         border-radius: inherit;
         transition: all 0.3s ease;
-    }    .stats-percentage {
+    }
+
+    .stats-percentage {
         font-size: 1.125rem;
         font-weight: 600;
         padding: 0.4rem 0.75rem;
@@ -164,39 +190,39 @@ require 'includes/header.php';
         position: relative;
         overflow: hidden;
     }
-    
+
     .pending-stats .stats-percentage {
         color: var(--warning);
         background: rgba(var(--bs-warning-rgb), 0.1);
     }
-    
+
     .approved-stats .stats-percentage {
         color: var(--success);
         background: rgba(var(--bs-success-rgb), 0.1);
     }
-    
+
     .rejected-stats .stats-percentage {
         color: var(--danger);
         background: rgba(var(--bs-danger-rgb), 0.1);
     }
-    
+
     .total-stats .stats-percentage {
         color: var(--primary);
         background: rgba(var(--bs-primary-rgb), 0.1);
     }
-    
+
     .stats-card:hover .stats-percentage {
         transform: translateY(-1px);
         box-shadow: 0 2px 8px rgba(var(--bs-primary-rgb), 0.15);
     }
-    
+
     @media (hover: none) {
         .stats-card:hover .stats-percentage {
             transform: none;
             box-shadow: none;
         }
     }
-    
+
     .stats-card::after {
         content: '';
         position: absolute;
@@ -204,29 +230,29 @@ require 'includes/header.php';
         right: 0;
         width: 100px;
         height: 100%;
-        background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+        background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
         transform: translateX(100%) skewX(-15deg);
         transition: all 0.5s ease;
     }
-    
+
     .stats-card:hover::after {
         transform: translateX(-100%) skewX(-15deg);
     }
-    
-        .bg-primary-soft {
+
+    .bg-primary-soft {
         background-color: rgba(var(--bs-primary-rgb), 0.1) !important;
     }
-    
+
     .progress {
-        background-color: rgba(0,0,0,0.05);
+        background-color: rgba(0, 0, 0, 0.05);
         overflow: hidden;
         transition: all 0.3s ease;
     }
-    
+
     .progress-bar {
         transition: width 0.6s ease, transform 0.3s ease;
     }
-    
+
     .stats-card:hover .progress-bar,
     .stats-card:hover .stats-progress-bar {
         transform: scaleY(1.2);
@@ -239,7 +265,7 @@ require 'includes/header.php';
             border-radius: 16px;
             overflow: hidden;
         }
-        
+
         .stats-card .card-body {
             padding: 1.25rem;
             display: flex;
@@ -247,7 +273,7 @@ require 'includes/header.php';
             align-items: center;
             text-align: center;
         }
-        
+
         .stats-icon-wrapper {
             width: 56px;
             height: 56px;
@@ -255,297 +281,312 @@ require 'includes/header.php';
             font-size: 1.75rem;
             background: rgba(var(--bs-primary-rgb), 0.1);
         }
-        
+
         .pending-stats .stats-icon-wrapper {
             background: rgba(var(--bs-warning-rgb), 0.1);
         }
-        
+
         .approved-stats .stats-icon-wrapper {
             background: rgba(var(--bs-success-rgb), 0.1);
         }
-        
+
         .rejected-stats .stats-icon-wrapper {
             background: rgba(var(--bs-danger-rgb), 0.1);
         }
-        
+
         .stats-number {
             font-size: 2.5rem;
             font-weight: 700;
             line-height: 1;
             margin-bottom: 0.5rem;
         }
-        
+
         .stats-title {
             font-size: 1rem;
             margin-bottom: 1rem;
             color: var(--text-muted);
             font-weight: 500;
         }
-        
+
         .stats-percentage {
             display: none;
         }
-        
+
         .stats-progress {
             width: 100%;
             height: 8px;
-            background: rgba(0,0,0,0.05);
+            background: rgba(0, 0, 0, 0.05);
             border-radius: 4px;
             overflow: hidden;
             margin-top: auto;
         }
-        
+
         .stats-progress-bar {
             height: 100%;
             border-radius: inherit;
             transition: transform 0.3s ease;
         }
-        
+
         .stats-card:active {
             transform: scale(0.98);
         }
     }
-    
+
     @media (max-width: 576px) {
         .stats-card .card-body {
             padding: 1rem;
         }
-        
+
         .stats-icon-wrapper {
             width: 48px;
             height: 48px;
             font-size: 1.5rem;
         }
-        
+
         .stats-number {
             font-size: 2rem;
         }
-        
+
         .stats-title {
             font-size: 0.938rem;
         }
-        
+
         .stats-progress {
             height: 6px;
         }
     }
-    
+
     .table-img {
         width: 48px;
         height: 48px;
         object-fit: cover;
-        border-radius: 50%;        border: 2px solid var(--surface);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-radius: 50%;
+        border: 2px solid var(--surface);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         transition: opacity 0.3s ease-in-out;
     }
-    
+
     .lazy {
         opacity: 0;
     }
-    
+
     img:not(.lazy) {
         opacity: 1;
     }
-      .registration-row {
+
+    .registration-row {
         transition: all 0.3s ease;
     }
-    
+
     .registration-row:hover {
         background-color: rgba(139, 69, 19, 0.05);
     }
-    
+
     .registration-row td {
         padding-top: 1rem;
         padding-bottom: 1rem;
         vertical-align: middle;
     }
-    
+
     .vstack {
         display: flex;
         flex-direction: column;
     }
-    
-    .vstack.gap-1 > * {
+
+    .vstack.gap-1>* {
         margin-bottom: 0.5rem;
     }
-    
-    .vstack.gap-1 > *:last-child {
+
+    .vstack.gap-1>*:last-child {
         margin-bottom: 0;
     }
-    
-    .table > :not(caption) > * > * {
+
+    .table> :not(caption)>*>* {
         padding: 1rem 0.75rem;
     }
-    
+
     .small {
         font-size: 0.875rem;
         line-height: 1.4;
-    }.comment-area {
+    }
+
+    .comment-area {
         background: var(--surface-soft);
         border-radius: 10px;
         padding: 1rem;
         margin-top: 1rem;
         transition: all 0.3s ease;
     }
-      .comment-bubble {
+
+    .comment-bubble {
         background: var(--surface);
         border-radius: 15px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         margin-bottom: 0.5rem;
         padding: 1rem;
     }
-    
+
     .comment-list {
         max-height: 300px;
         overflow-y: auto;
         margin-bottom: 1rem;
         scrollbar-width: thin;
-        scrollbar-color: rgba(0,0,0,0.2) transparent;
+        scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
     }
-    
+
     .comment-list::-webkit-scrollbar {
         width: 6px;
     }
-    
+
     .comment-list::-webkit-scrollbar-track {
         background: transparent;
     }
-    
+
     .comment-list::-webkit-scrollbar-thumb {
-        background-color: rgba(0,0,0,0.2);
+        background-color: rgba(0, 0, 0, 0.2);
         border-radius: 3px;
     }
-      .comment-area textarea {
+
+    .comment-area textarea {
         resize: none;
         border-radius: 8px;
         transition: all 0.2s ease;
         min-height: 200px;
         height: auto;
     }
-      .comment-area textarea:focus {
+
+    .comment-area textarea:focus {
         box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
         border-color: var(--primary);
-    }    @media (max-width: 768px) {
+    }
+
+    @media (max-width: 768px) {
         .comment-area textarea {
             min-height: 250px;
-            font-size: 16px; /* Prevents iOS zoom on focus */
+            font-size: 16px;
+            /* Prevents iOS zoom on focus */
             line-height: 1.4;
             padding: 12px;
         }
-        
+
         .table-responsive {
             margin: 0 -1rem;
         }
-        
-        .table > :not(caption) > * > * {
+
+        .table> :not(caption)>*>* {
             white-space: normal;
             min-width: 200px;
             padding: 0.75rem;
         }
-        
-        .vstack.gap-1 > * {
+
+        .vstack.gap-1>* {
             margin-bottom: 0.35rem;
         }
-        
+
         .table .small {
             font-size: 0.813rem;
         }
-        
+
         td .bi {
             font-size: 0.875rem;
         }
     }
-    
+
     .comment-actions {
         display: flex;
         gap: 0.5rem;
         margin-top: 0.5rem;
     }
-    
+
     .status-badge {
         font-size: 0.875rem;
         padding: 0.5rem 1rem;
         border-radius: 50px;
     }
-      .mobile-menu {
+
+    .mobile-menu {
         position: fixed;
         bottom: 0;
         left: 0;
         right: 0;
         background: var(--surface);
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
         z-index: 1000;
         display: none;
         padding: 0.5rem;
-    }@media (max-width: 768px) {
+    }
+
+    @media (max-width: 768px) {
         .stats-card {
             margin-bottom: 0.5rem;
         }
-        
+
         .stats-card .card-body {
             padding: 1rem;
             justify-content: flex-start;
         }
-        
+
         .stats-icon {
             font-size: 2.5rem;
             margin-bottom: 0;
         }
-        
+
         .stats-icon-wrapper {
             min-width: 60px;
             display: flex;
             justify-content: center;
         }
-        
+
         .stats-number {
             font-size: 1.5rem;
             line-height: 1.2;
         }
-        
+
         .card-title {
             font-size: 0.875rem;
             opacity: 0.8;
         }
-        
+
         .table-responsive {
             margin: 0 -1rem;
         }
-        
+
         .mobile-menu {
             display: flex;
             justify-content: space-around;
             align-items: center;
         }
-        
+
         .main-container {
             padding-bottom: 70px;
         }
-          .comment-area {
+
+        .comment-area {
             margin: 0.5rem -1rem;
             padding: 0.75rem;
             border-radius: 0;
             background: var(--surface);
-            box-shadow: 0 -1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.1);
         }
-        
+
         .comment-list .alert {
             padding: 0.5rem 0.75rem;
             margin-bottom: 0.5rem;
             font-size: 0.9rem;
         }
-        
+
         #comment-input {
             font-size: 0.95rem;
             padding: 0.5rem;
         }
-        
-        .btn-group-sm > .btn {
+
+        .btn-group-sm>.btn {
             padding: 0.25rem 0.5rem;
             font-size: 0.875rem;
         }
     }
-      /* Enhanced Status Select and Action Buttons */
+
+    /* Enhanced Status Select and Action Buttons */
     .status-select-wrapper {
         position: relative;
         width: 130px;
@@ -558,7 +599,7 @@ require 'includes/header.php';
         background-repeat: no-repeat;
         background-position: right 0.5rem center;
         background-size: 16px 12px;
-        border: 1px solid rgba(0,0,0,0.1);
+        border: 1px solid rgba(0, 0, 0, 0.1);
         border-radius: 8px;
         transition: all 0.2s ease;
         cursor: pointer;
@@ -602,11 +643,11 @@ require 'includes/header.php';
         .btn-text {
             display: inline;
         }
-        
+
         .status-select-wrapper {
             width: 150px;
         }
-        
+
         .status-select {
             padding: 0.45rem 2rem 0.45rem 0.75rem;
         }
@@ -623,216 +664,222 @@ require 'includes/header.php';
         transform-origin: left;
     }
 
-    [data-status="Pending"] ~ .status-indicator {
+    [data-status="Pending"]~.status-indicator {
         background: var(--warning);
     }
 
-    [data-status="Approved"] ~ .status-indicator {
+    [data-status="Approved"]~.status-indicator {
         background: var(--success);
     }
 
-    [data-status="Rejected"] ~ .status-indicator {
+    [data-status="Rejected"]~.status-indicator {
         background: var(--danger);
     }
-    
+
     /* Stats Card Hover Effects and Transitions */
     .stats-card {
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         transform: translateZ(0);
         will-change: transform;
     }
-    
+
     .stats-card:hover {
         transform: translateY(-2px) translateZ(0);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
     }
-    
+
     .stats-icon-wrapper {
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    
+
     .stats-card:hover .stats-icon-wrapper {
         transform: scale(1.05);
     }
-    
+
     .stats-percentage {
         transition: all 0.3s ease;
     }
-    
+
     .stats-card:hover .stats-percentage {
         transform: translateY(-1px);
         box-shadow: 0 2px 8px rgba(var(--bs-primary-rgb), 0.15);
     }
-    
+
     .stats-progress {
         transition: transform 0.3s ease;
     }
-    
+
     .stats-card:hover .stats-progress {
         transform: scaleY(1.2);
     }
-    
+
     .stats-progress-bar {
         transition: width 0.6s ease, transform 0.3s ease;
     }
-    
+
     @media (hover: hover) {
         .stats-card:active {
             transform: translateY(0) translateZ(0);
         }
     }
-    
+
     @media (hover: none) {
         .stats-card:hover {
             transform: none;
             box-shadow: none;
         }
-        
+
         .stats-card:hover .stats-icon-wrapper {
             transform: none;
         }
-        
+
         .stats-card:hover .stats-percentage {
             transform: none;
             box-shadow: none;
         }
-        
+
         .stats-card:hover .stats-progress {
             transform: none;
         }
     }
-    
+
     @media (max-width: 768px) {
         .comment-area textarea {
             min-height: 250px;
-            font-size: 16px; /* Prevents iOS zoom on focus */
+            font-size: 16px;
+            /* Prevents iOS zoom on focus */
             line-height: 1.4;
             padding: 12px;
         }
-        
+
         .table-responsive {
             margin: 0 -1rem;
         }
-        
-        .table > :not(caption) > * > * {
+
+        .table> :not(caption)>*>* {
             white-space: normal;
             min-width: 200px;
             padding: 0.75rem;
         }
-        
-        .vstack.gap-1 > * {
+
+        .vstack.gap-1>* {
             margin-bottom: 0.35rem;
         }
-        
+
         .table .small {
             font-size: 0.813rem;
         }
-        
+
         td .bi {
             font-size: 0.875rem;
         }
     }
-    
+
     .comment-actions {
         display: flex;
         gap: 0.5rem;
         margin-top: 0.5rem;
     }
-    
+
     .status-badge {
         font-size: 0.875rem;
         padding: 0.5rem 1rem;
         border-radius: 50px;
     }
-      .mobile-menu {
+
+    .mobile-menu {
         position: fixed;
         bottom: 0;
         left: 0;
         right: 0;
         background: var(--surface);
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
         z-index: 1000;
         display: none;
         padding: 0.5rem;
-    }@media (max-width: 768px) {
+    }
+
+    @media (max-width: 768px) {
         .stats-card {
             margin-bottom: 0.5rem;
         }
-        
+
         .stats-card .card-body {
             padding: 1rem;
             justify-content: flex-start;
         }
-        
+
         .stats-icon {
             font-size: 2.5rem;
             margin-bottom: 0;
         }
-        
+
         .stats-icon-wrapper {
             min-width: 60px;
             display: flex;
             justify-content: center;
         }
-        
+
         .stats-number {
             font-size: 1.5rem;
             line-height: 1.2;
         }
-        
+
         .card-title {
             font-size: 0.875rem;
             opacity: 0.8;
         }
-        
+
         .table-responsive {
             margin: 0 -1rem;
         }
-        
+
         .mobile-menu {
             display: flex;
             justify-content: space-around;
             align-items: center;
         }
-        
+
         .main-container {
             padding-bottom: 70px;
         }
-          .comment-area {
+
+        .comment-area {
             margin: 0.5rem -1rem;
             padding: 0.75rem;
             border-radius: 0;
             background: var(--surface);
-            box-shadow: 0 -1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.1);
         }
-        
+
         .comment-list .alert {
             padding: 0.5rem 0.75rem;
             margin-bottom: 0.5rem;
             font-size: 0.9rem;
         }
-        
+
         #comment-input {
             font-size: 0.95rem;
             padding: 0.5rem;
         }
-        
-        .btn-group-sm > .btn {
+
+        .btn-group-sm>.btn {
             padding: 0.25rem 0.5rem;
             font-size: 0.875rem;
         }
     }
-      /* Status Colors */
+
+    /* Status Colors */
     .status-pending {
         background-color: var(--warning-light);
         color: var(--warning);
     }
-    
+
     .status-approved {
         background-color: var(--success-light);
         color: var(--success);
     }
-    
+
     .status-rejected {
         background-color: var(--danger-light);
         color: var(--danger);
@@ -852,25 +899,25 @@ require 'includes/header.php';
             timeout = setTimeout(later, wait);
         };
     }
-    
+
     // Cache comments to reduce server load
     const commentCache = new Map();
-    
+
     function showComments(id) {
-        const box = document.getElementById('comments-'+id);
+        const box = document.getElementById('comments-' + id);
         if (box.style.display === 'none') {
             box.style.display = 'block';
-            
+
             // Check cache first
             if (commentCache.has(id)) {
                 box.innerHTML = commentCache.get(id);
                 return;
             }
-            
+
             // Show loading indicator
             box.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div></div>';
-            
-            fetch('comment.php?reg_id='+id)
+
+            fetch('comment.php?reg_id=' + id)
                 .then(resp => resp.text())
                 .then(html => {
                     box.innerHTML = html;
@@ -880,95 +927,95 @@ require 'includes/header.php';
             box.style.display = 'none';
         }
     }
-    
+
     const addComment = debounce(function(id) {
-        const input = document.getElementById('comment-input-'+id);
+        const input = document.getElementById('comment-input-' + id);
         const comment = input.value.trim();
         if (!comment) return;
-        
-        const box = document.getElementById('comments-'+id);
+
+        const box = document.getElementById('comments-' + id);
         const btn = box.querySelector('button[onclick^="addComment"]');
         btn.disabled = true;
-        
+
         const formData = new FormData();
         formData.append('reg_id', id);
         formData.append('comment', comment);
-        
+
         fetch('comment.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.text())
-        .then(result => {
-            if (result.includes('alert-secondary')) {
-                box.innerHTML = result;
-                input.value = '';
-                commentCache.set(id, result); // Update cache
-            } else {
-                throw new Error('Failed to add comment');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error adding comment');
-        })
-        .finally(() => {
-            btn.disabled = false;
-        });
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(result => {
+                if (result.includes('alert-secondary')) {
+                    box.innerHTML = result;
+                    input.value = '';
+                    commentCache.set(id, result); // Update cache
+                } else {
+                    throw new Error('Failed to add comment');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error adding comment');
+            })
+            .finally(() => {
+                btn.disabled = false;
+            });
     }, 500);
 
     const editComment = debounce(function(regId, commentId, oldComment) {
         const newComment = prompt('Edit comment:', oldComment);
         if (!newComment || newComment === oldComment) return;
-        
-        const box = document.getElementById('comments-'+regId);
+
+        const box = document.getElementById('comments-' + regId);
         const btn = box.querySelector(`button[onclick*="editComment(${regId}, ${commentId}"]`);
         if (btn) btn.disabled = true;
-        
+
         const formData = new FormData();
         formData.append('reg_id', regId);
         formData.append('edit_id', commentId);
         formData.append('comment', newComment);
-        
+
         fetch('comment.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.text())
-        .then(result => {
-            if (result.includes('alert-secondary')) {
-                box.innerHTML = result;
-                commentCache.set(regId, result); // Update cache
-            } else {
-                throw new Error('Failed to update comment');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error updating comment');
-        })
-        .finally(() => {
-            if (btn) btn.disabled = false;
-        });
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(result => {
+                if (result.includes('alert-secondary')) {
+                    box.innerHTML = result;
+                    commentCache.set(regId, result); // Update cache
+                } else {
+                    throw new Error('Failed to update comment');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating comment');
+            })
+            .finally(() => {
+                if (btn) btn.disabled = false;
+            });
     }, 500);
 
     function updateStatus(select) {
         const form = select.closest('form');
         const statusIndicator = select.parentElement.querySelector('.status-indicator');
-        
+
         // Update status indicator
         select.dataset.status = select.value;
-        
+
         // Animate the indicator
         statusIndicator.style.transform = 'scaleX(0)';
         setTimeout(() => {
             statusIndicator.style.transform = 'scaleX(1)';
         }, 50);
-        
+
         // Submit the form
         form.submit();
     }
-    
+
     // Initialize status indicators
     document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.status-select').forEach(select => {
@@ -1023,12 +1070,12 @@ require 'includes/header.php';
                                 </span>
                             </div>
                             <div class="progress bg-light" style="height: 8px;">
-                                <div class="progress-bar bg-success" role="progressbar" 
-                                     style="width: <?= $total > 0 ? ($approved / $total) * 100 : 0 ?>%" 
-                                     title="Approved"></div>
-                                <div class="progress-bar bg-danger" role="progressbar" 
-                                     style="width: <?= $total > 0 ? ($rejected / $total) * 100 : 0 ?>%" 
-                                     title="Rejected"></div>
+                                <div class="progress-bar bg-success" role="progressbar"
+                                    style="width: <?= $total > 0 ? ($approved / $total) * 100 : 0 ?>%"
+                                    title="Approved"></div>
+                                <div class="progress-bar bg-danger" role="progressbar"
+                                    style="width: <?= $total > 0 ? ($rejected / $total) * 100 : 0 ?>%"
+                                    title="Rejected"></div>
                             </div>
                         </div>
                         <div class="col-md-4 text-md-end mt-3 mt-md-0">
@@ -1056,8 +1103,8 @@ require 'includes/header.php';
                     <h3 class="stats-number text-warning"><?= $pending ?></h3>
                     <p class="stats-title">Pending Review</p>
                     <div class="stats-progress">
-                        <div class="stats-progress-bar bg-warning" 
-                             style="width: <?= $total > 0 ? ($pending / $total) * 100 : 0 ?>%"></div>
+                        <div class="stats-progress-bar bg-warning"
+                            style="width: <?= $total > 0 ? ($pending / $total) * 100 : 0 ?>%"></div>
                     </div>
                 </div>
             </div>
@@ -1077,8 +1124,8 @@ require 'includes/header.php';
                     <h3 class="stats-number text-success"><?= $approved ?></h3>
                     <p class="stats-title">Approved</p>
                     <div class="stats-progress">
-                        <div class="stats-progress-bar bg-success" 
-                             style="width: <?= $total > 0 ? ($approved / $total) * 100 : 0 ?>%"></div>
+                        <div class="stats-progress-bar bg-success"
+                            style="width: <?= $total > 0 ? ($approved / $total) * 100 : 0 ?>%"></div>
                     </div>
                 </div>
             </div>
@@ -1098,8 +1145,8 @@ require 'includes/header.php';
                     <h3 class="stats-number text-danger"><?= $rejected ?></h3>
                     <p class="stats-title">Rejected</p>
                     <div class="stats-progress">
-                        <div class="stats-progress-bar bg-danger" 
-                             style="width: <?= $total > 0 ? ($rejected / $total) * 100 : 0 ?>%"></div>
+                        <div class="stats-progress-bar bg-danger"
+                            style="width: <?= $total > 0 ? ($rejected / $total) * 100 : 0 ?>%"></div>
                     </div>
                 </div>
             </div>
@@ -1144,162 +1191,163 @@ require 'includes/header.php';
                     </tr>
                 </thead>
                 <tbody>
-                    <?php while($row = $res->fetch_assoc()): 
+                    <?php while ($row = $res->fetch_assoc()):
                         // Calculate age
                         $dob = new DateTime($row['dob']);
                         $now = new DateTime();
                         $age = $now->diff($dob)->y;
                     ?>
-                    <tr class="registration-row">
-                        <td class="ps-3">
-                            <div class="d-flex align-items-center gap-3">
-                                <?php if ($row['photo']): ?>
-                                    <img src="<?= generatePlaceholder() ?>" 
-                                         data-src="uploads/<?= htmlspecialchars($row['photo']) ?>"
-                                         class="table-img lazy" 
-                                         loading="lazy"
-                                         alt="Photo of <?= htmlspecialchars($row['name']) ?>"
-                                         width="48" height="48">
-                                <?php else: ?>
-                                    <div class="table-img bg-light d-flex align-items-center justify-content-center">
-                                        <i class="bi bi-person text-muted"></i>
+                        <tr class="registration-row">
+                            <td class="ps-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <?php if ($row['photo']): ?>
+                                        <img src="<?= generatePlaceholder() ?>"
+                                            data-src="uploads/<?= htmlspecialchars($row['photo']) ?>"
+                                            class="table-img lazy"
+                                            loading="lazy"
+                                            alt="Photo of <?= htmlspecialchars($row['name']) ?>"
+                                            width="48" height="48">
+                                    <?php else: ?>
+                                        <div class="table-img bg-light d-flex align-items-center justify-content-center">
+                                            <i class="bi bi-person text-muted"></i>
+                                        </div>
+                                    <?php endif; ?>
+                                    <div>
+                                        <a href="user_details.php?id=<?= $row['id'] ?>" class="text-decoration-none">
+                                            <div class="fw-bold text-dark"><?= htmlspecialchars($row['name']) ?></div>
+                                            <small class="text-muted">ID: #<?= $row['id'] ?></small>
+                                        </a>
                                     </div>
-                                <?php endif; ?>
-                                <div>
-                                    <a href="user_details.php?id=<?= $row['id'] ?>" class="text-decoration-none">
-                                        <div class="fw-bold text-dark"><?= htmlspecialchars($row['name']) ?></div>
-                                        <small class="text-muted">ID: #<?= $row['id'] ?></small>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="vstack gap-1">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-calendar3 me-2 text-primary"></i>
+                                        <span><?= htmlspecialchars($row['dob']) ?> (<?= $age ?> years)</span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-people me-2 text-success"></i>
+                                        <span>
+                                            <?= htmlspecialchars($row['father_name']) ?> (Father)<br>
+                                            <?= htmlspecialchars($row['mother_name']) ?> (Mother)
+                                        </span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="vstack gap-1">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-phone me-2 text-primary"></i>
+                                        <span><?= htmlspecialchars($row['phone']) ?></span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-house me-2 text-danger"></i>
+                                        <div class="small">
+                                            <div><?= htmlspecialchars($row['permanent_address']) ?></div>
+                                            <?php if ($row['temporary_address']): ?>
+                                                <div class="text-muted"><?= htmlspecialchars($row['temporary_address']) ?> (Temp)</div>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="vstack gap-1">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-building me-2 text-primary"></i>
+                                        <span><?= htmlspecialchars($row['school_name']) ?></span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-mortarboard me-2 text-warning"></i>
+                                        <span>Class <?= htmlspecialchars($row['passed_class']) ?></span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status-badge status-<?= strtolower($row['status']) ?>">
+                                    <?= $row['status'] ?>
+                                </span>
+                            </td>
+                            <td class="text-end pe-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <form method="POST" class="status-form">
+                                        <input type="hidden" name="reg_id" value="<?= $row['id'] ?>">
+                                        <input type="hidden" name="update_status" value="1">
+                                        <div class="status-select-wrapper">
+                                            <select name="status" class="form-select form-select-sm status-select"
+                                                onchange="updateStatus(this)" data-id="<?= $row['id'] ?>">
+                                                <option value="Pending" <?= $row['status'] == 'Pending' ? 'selected' : ''; ?>>
+                                                    <i class="bi bi-hourglass-split"></i> Pending
+                                                </option>
+                                                <option value="Approved" <?= $row['status'] == 'Approved' ? 'selected' : ''; ?>>
+                                                    <i class="bi bi-check-circle"></i> Approved
+                                                </option>
+                                                <option value="Rejected" <?= $row['status'] == 'Rejected' ? 'selected' : ''; ?>>
+                                                    <i class="bi bi-x-circle"></i> Rejected
+                                                </option>
+                                            </select>
+                                            <div class="status-indicator"></div>
+                                        </div>
+                                    </form>
+                                    <a href="user_details.php?id=<?= $row['id'] ?>"
+                                        class="btn btn-outline-primary btn-sm action-btn">
+                                        <i class="bi bi-eye"></i>
+                                        <span class="btn-text">View Details</span>
                                     </a>
                                 </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="vstack gap-1">
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-calendar3 me-2 text-primary"></i>
-                                    <span><?= htmlspecialchars($row['dob']) ?> (<?= $age ?> years)</span>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-people me-2 text-success"></i>
-                                    <span>
-                                        <?= htmlspecialchars($row['father_name']) ?> (Father)<br>
-                                        <?= htmlspecialchars($row['mother_name']) ?> (Mother)
-                                    </span>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="vstack gap-1">
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-phone me-2 text-primary"></i>
-                                    <span><?= htmlspecialchars($row['phone']) ?></span>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-house me-2 text-danger"></i>
-                                    <div class="small">
-                                        <div><?= htmlspecialchars($row['permanent_address']) ?></div>
-                                        <?php if ($row['temporary_address']): ?>
-                                            <div class="text-muted"><?= htmlspecialchars($row['temporary_address']) ?> (Temp)</div>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="vstack gap-1">
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-building me-2 text-primary"></i>
-                                    <span><?= htmlspecialchars($row['school_name']) ?></span>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-mortarboard me-2 text-warning"></i>
-                                    <span>Class <?= htmlspecialchars($row['passed_class']) ?></span>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="status-badge status-<?= strtolower($row['status']) ?>">
-                                <?= $row['status'] ?>
-                            </span>
-                        </td>
-                        <td class="text-end pe-3">                            <div class="d-flex align-items-center gap-2">
-                                <form method="POST" class="status-form">
-                                    <input type="hidden" name="reg_id" value="<?= $row['id'] ?>">
-                                    <input type="hidden" name="update_status" value="1">
-                                    <div class="status-select-wrapper">
-                                        <select name="status" class="form-select form-select-sm status-select" 
-                                                onchange="updateStatus(this)" data-id="<?= $row['id'] ?>">
-                                            <option value="Pending" <?= $row['status']=='Pending'?'selected':''; ?>>
-                                                <i class="bi bi-hourglass-split"></i> Pending
-                                            </option>
-                                            <option value="Approved" <?= $row['status']=='Approved'?'selected':''; ?>>
-                                                <i class="bi bi-check-circle"></i> Approved
-                                            </option>
-                                            <option value="Rejected" <?= $row['status']=='Rejected'?'selected':''; ?>>
-                                                <i class="bi bi-x-circle"></i> Rejected
-                                            </option>
-                                        </select>
-                                        <div class="status-indicator"></div>
-                                    </div>
-                                </form>
-                                <a href="user_details.php?id=<?= $row['id'] ?>" 
-                                   class="btn btn-outline-primary btn-sm action-btn">
-                                    <i class="bi bi-eye"></i>
-                                    <span class="btn-text">View Details</span>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>                    <?php endwhile; ?>
+                            </td>
+                        </tr> <?php endwhile; ?>
                 </tbody>
             </table>
         </div>
-        
+
         <!-- Pagination -->
         <?php if ($total_pages > 1): ?>
-        <div class="card-footer bg-white border-0 py-3">
-            <nav aria-label="Registration pages">
-                <ul class="pagination justify-content-center mb-0">
-                    <?php if ($page > 1): ?>
-                    <li class="page-item">
-                        <a class="page-link" href="?page=<?= $page-1 ?>" aria-label="Previous">
-                            <i class="bi bi-chevron-left"></i>
-                        </a>
-                    </li>
-                    <?php endif; ?>
-                    
-                    <?php
-                    $start = max(1, $page - 2);
-                    $end = min($total_pages, $page + 2);
-                    
-                    if ($start > 1) {
-                        echo '<li class="page-item"><a class="page-link" href="?page=1">1</a></li>';
-                        if ($start > 2) echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
-                    }
-                    
-                    for ($i = $start; $i <= $end; $i++) {
-                        echo '<li class="page-item '.($i == $page ? 'active' : '').'">
-                              <a class="page-link" href="?page='.$i.'">'.$i.'</a>
+            <div class="card-footer bg-white border-0 py-3">
+                <nav aria-label="Registration pages">
+                    <ul class="pagination justify-content-center mb-0">
+                        <?php if ($page > 1): ?>
+                            <li class="page-item">
+                                <a class="page-link" href="?page=<?= $page - 1 ?>" aria-label="Previous">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                        <?php endif; ?>
+
+                        <?php
+                        $start = max(1, $page - 2);
+                        $end = min($total_pages, $page + 2);
+
+                        if ($start > 1) {
+                            echo '<li class="page-item"><a class="page-link" href="?page=1">1</a></li>';
+                            if ($start > 2) echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                        }
+
+                        for ($i = $start; $i <= $end; $i++) {
+                            echo '<li class="page-item ' . ($i == $page ? 'active' : '') . '">
+                              <a class="page-link" href="?page=' . $i . '">' . $i . '</a>
                               </li>';
-                    }
-                    
-                    if ($end < $total_pages) {
-                        if ($end < $total_pages - 1) echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
-                        echo '<li class="page-item"><a class="page-link" href="?page='.$total_pages.'">'.$total_pages.'</a></li>';
-                    }
-                    ?>
-                    
-                    <?php if ($page < $total_pages): ?>
-                    <li class="page-item">
-                        <a class="page-link" href="?page=<?= $page+1 ?>" aria-label="Next">
-                            <i class="bi bi-chevron-right"></i>
-                        </a>
-                    </li>
-                    <?php endif; ?>
-                </ul>
-            </nav>
-        </div>
+                        }
+
+                        if ($end < $total_pages) {
+                            if ($end < $total_pages - 1) echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                            echo '<li class="page-item"><a class="page-link" href="?page=' . $total_pages . '">' . $total_pages . '</a></li>';
+                        }
+                        ?>
+
+                        <?php if ($page < $total_pages): ?>
+                            <li class="page-item">
+                                <a class="page-link" href="?page=<?= $page + 1 ?>" aria-label="Next">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        <?php endif; ?>
+                    </ul>
+                </nav>
+            </div>
         <?php endif; ?>
-    </div>    
+    </div>
     <!-- Mobile Menu -->
     <div class="mobile-menu">
         <a href="index.php" class="btn btn-link text-dark">
@@ -1309,11 +1357,11 @@ require 'includes/header.php';
         <button class="btn btn-link text-dark" onclick="document.documentElement.scrollTop = 0">
             <i class="bi bi-arrow-up-circle"></i>
             <small class="d-block">Top</small>
-        </a>
-        <a href="logout.php" class="btn btn-link text-danger">
-            <i class="bi bi-box-arrow-right"></i>
-            <small class="d-block">Logout</small>
-        </a>
+            </a>
+            <a href="logout.php" class="btn btn-link text-danger">
+                <i class="bi bi-box-arrow-right"></i>
+                <small class="d-block">Logout</small>
+            </a>
     </div>
 </div>
 
@@ -1342,7 +1390,7 @@ require 'includes/header.php';
         // Handle pagination state
         const params = new URLSearchParams(window.location.search);
         const currentPage = params.get('page') || '1';
-        
+
         // Preserve page parameter when updating status
         document.querySelectorAll('form[method="POST"]').forEach(form => {
             form.addEventListener('submit', function(e) {
@@ -1360,4 +1408,5 @@ require 'includes/header.php';
 
 <?php require 'includes/footer.php'; ?>
 </body>
+
 </html>

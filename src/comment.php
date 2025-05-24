@@ -6,7 +6,7 @@ if (!isset($_SESSION['admin'])) exit("Login required.");
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $reg_id = intval($_POST['reg_id']);
     $comment = trim($_POST['comment']);
-    
+
     if (isset($_POST['edit_id'])) {
         // Edit existing comment
         $edit_id = intval($_POST['edit_id']);
@@ -24,7 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $res->bind_param("i", $reg_id);
         $res->execute();
         $result = $res->get_result();
-        
+
         echo "<div class='comment-list'>";
         $count = 0;
         while ($row = $result->fetch_assoc()) {
@@ -86,4 +86,3 @@ echo "</div>";
 echo "<script>document.getElementById('comment-count').textContent = '{$count}';</script>";
 echo "</div>";
 $res->close();
-?>

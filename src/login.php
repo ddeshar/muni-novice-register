@@ -49,7 +49,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 ?>
-<?php 
+<?php
 $title = "Admin Login";
 require 'includes/header.php';
 ?>
@@ -59,7 +59,7 @@ require 'includes/header.php';
         max-width: 400px;
         margin: 2rem auto;
     }
-    
+
     .login-header {
         background: var(--primary-gradient);
         color: white;
@@ -68,32 +68,49 @@ require 'includes/header.php';
         margin: -1.5rem -1.5rem 1.5rem;
         border-radius: 15px 15px 0 0;
     }
-    
+
     .login-icon {
         font-size: 3rem;
         margin-bottom: 1rem;
     }
-    
+
     .form-floating {
         margin-bottom: 1rem;
     }
-    
+
     .error-shake {
-        animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+        animation: shake 0.82s cubic-bezier(.36, .07, .19, .97) both;
     }
-    
+
     @keyframes shake {
-        10%, 90% { transform: translate3d(-1px, 0, 0); }
-        20%, 80% { transform: translate3d(2px, 0, 0); }
-        30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-        40%, 60% { transform: translate3d(4px, 0, 0); }
+
+        10%,
+        90% {
+            transform: translate3d(-1px, 0, 0);
+        }
+
+        20%,
+        80% {
+            transform: translate3d(2px, 0, 0);
+        }
+
+        30%,
+        50%,
+        70% {
+            transform: translate3d(-4px, 0, 0);
+        }
+
+        40%,
+        60% {
+            transform: translate3d(4px, 0, 0);
+        }
     }
-    
+
     @media (max-width: 576px) {
         .login-card {
             margin: 1rem;
         }
-        
+
         .login-header {
             padding: 1.5rem;
         }
@@ -108,23 +125,23 @@ require 'includes/header.php';
                     <i class="bi bi-shield-lock login-icon"></i>
                     <h2 class="mb-0">Admin Login</h2>
                 </div>
-                
+
                 <?php if ($error): ?>
-                <div class="alert alert-danger alert-dismissible fade show error-shake" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill"></i> <?php echo $error; ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
+                    <div class="alert alert-danger alert-dismissible fade show error-shake" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill"></i> <?php echo $error; ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
                 <?php endif; ?>
-                
+
                 <form method="POST" class="needs-validation" novalidate>
                     <div class="form-floating mb-3">
-                        <input type="text" 
-                               name="username" 
-                               class="form-control" 
-                               id="username" 
-                               placeholder="Username"
-                               required 
-                               autofocus>
+                        <input type="text"
+                            name="username"
+                            class="form-control"
+                            id="username"
+                            placeholder="Username"
+                            required
+                            autofocus>
                         <label for="username">
                             <i class="bi bi-person"></i> Username
                         </label>
@@ -132,14 +149,14 @@ require 'includes/header.php';
                             Please enter your username
                         </div>
                     </div>
-                    
+
                     <div class="form-floating mb-4">
-                        <input type="password" 
-                               name="password" 
-                               class="form-control" 
-                               id="password" 
-                               placeholder="Password"
-                               required>
+                        <input type="password"
+                            name="password"
+                            class="form-control"
+                            id="password"
+                            placeholder="Password"
+                            required>
                         <label for="password">
                             <i class="bi bi-key"></i> Password
                         </label>
@@ -147,7 +164,7 @@ require 'includes/header.php';
                             Please enter your password
                         </div>
                     </div>
-                    
+
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-primary btn-lg">
                             <i class="bi bi-box-arrow-in-right"></i> Login
