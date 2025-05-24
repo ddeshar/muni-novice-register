@@ -29,8 +29,15 @@
     ExpiresDefault "access plus 2 days"
 </IfModule>
 
-# Set security headers
+# Set security headers and redirects
 <IfModule mod_headers.c>
+    # Security headers
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "DENY"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+    
     # Cache static files for 1 year
     <FilesMatch "\.(ico|pdf|jpg|jpeg|png|gif|css|js)$">
         Header set Cache-Control "public, max-age=31536000"
@@ -40,4 +47,40 @@
     <FilesMatch "\.(html|php)$">
         Header set Cache-Control "public, must-revalidate, max-age=7200"
     </FilesMatch>
+</IfModule>
+
+# Rewrite rules
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    
+    # Redirect HTTP to HTTPS
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+    
+    # Protect sensitive files
+    RewriteRule ^\.env - [F,L]
+    RewriteRule ^\.gitignore - [F,L]
+    RewriteRule ^composer\.json - [F,L]
+    RewriteRule ^composer\.lock - [F,L]
+    
+    # Block access to sensitive directories
+    RewriteRule ^includes/ - [F,L]
+</IfModule>
+
+# Disable directory listing
+Options -Indexes
+
+# Protect files and directories
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# PHP settings
+<IfModule mod_php.c>
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+    php_value max_execution_time 30
+    php_value max_input_time 60
 </IfModule>

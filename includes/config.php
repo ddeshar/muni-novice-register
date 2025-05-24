@@ -34,8 +34,33 @@ if (!$envLoaded) {
     error_log('Warning: .env file not found');
 }
 
+// Determine environment
+define('ENVIRONMENT', getenv('ENVIRONMENT') ?: 'production');
+
+// Set error reporting based on environment
+if (ENVIRONMENT === 'development') {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+} else {
+    error_reporting(0);
+    ini_set('display_errors', 0);
+}
+
 // Database configuration
-define('DB_HOST', getenv('DB_HOST') ?: 'db');
+define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
 define('DB_USER', getenv('DB_USER') ?: 'reguser');
-define('DB_PASSWORD', getenv('DB_PASSWORD') ?: 'regpass');
+define('DB_PASSWORD', getenv('DB_PASSWORD') ?: '');
 define('DB_NAME', getenv('DB_NAME') ?: 'registration');
+
+// Security configuration
+define('SESSION_LIFETIME', 7200); // 2 hours
+ini_set('session.gc_maxlifetime', SESSION_LIFETIME);
+ini_set('session.cookie_lifetime', SESSION_LIFETIME);
+ini_set('session.cookie_secure', 1);
+ini_set('session.cookie_httponly', 1);
+ini_set('session.use_strict_mode', 1);
+
+// Upload configuration
+define('UPLOAD_MAX_SIZE', 10 * 1024 * 1024); // 10MB
+define('ALLOWED_MIME_TYPES', ['image/jpeg', 'image/png']);
+define('UPLOAD_PATH', __DIR__ . '/../uploads');

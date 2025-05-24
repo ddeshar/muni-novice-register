@@ -35,8 +35,8 @@ data/
 mysql/
 
 # PHP specific
-/src/uploads/*
-!/src/uploads/.gitkeep
+/uploads/*
+!/uploads/.gitkeep
 
 # Compiled output
 /dist
