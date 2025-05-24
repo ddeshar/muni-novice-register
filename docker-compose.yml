@@ -3,11 +3,13 @@ version: "3.8"
 services:
   db:
     image: mysql:8.0
+    env_file:
+      - ./src/.env
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: registration
-      MYSQL_USER: reguser
-      MYSQL_PASSWORD: regpass
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
       - "3307:3306"
     volumes:
@@ -28,13 +30,15 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    env_file:
+      - ./src/.env
     environment:
-      PHP_UPLOAD_MAX_FILESIZE: 10M
-      PHP_POST_MAX_SIZE: 10M
-      PHP_OPCACHE_ENABLE: 0
-      PHP_ERROR_REPORTING: E_ALL
-      PHP_DISPLAY_ERRORS: 1
-      PHP_DISPLAY_STARTUP_ERRORS: 1
+      PHP_UPLOAD_MAX_FILESIZE: ${PHP_UPLOAD_MAX_FILESIZE}
+      PHP_POST_MAX_SIZE: ${PHP_POST_MAX_SIZE}
+      PHP_OPCACHE_ENABLE: ${PHP_OPCACHE_ENABLE}
+      PHP_ERROR_REPORTING: ${PHP_ERROR_REPORTING}
+      PHP_DISPLAY_ERRORS: ${PHP_DISPLAY_ERRORS}
+      PHP_DISPLAY_STARTUP_ERRORS: ${PHP_DISPLAY_STARTUP_ERRORS}
     restart: unless-stopped
 
   phpmyadmin:

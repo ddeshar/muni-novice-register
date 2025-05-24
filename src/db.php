@@ -1,9 +1,11 @@
 <?php
 session_start();
-$host = 'db';
-$user = 'reguser';
-$pass = 'regpass';
-$dbname = 'registration';
+require_once __DIR__ . '/includes/config.php';
+
+$host = DB_HOST;
+$user = DB_USER;
+$pass = DB_PASSWORD;
+$dbname = DB_NAME;
 
 // Helper function to generate tiny placeholder
 function generatePlaceholder($width = 48, $height = 48)
