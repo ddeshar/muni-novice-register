@@ -72,11 +72,9 @@ require 'includes/header.php';
     .status-select:focus {
         box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.1);
         border-color: rgba(255, 255, 255, 0.5);
-    }
-
-    .status-select option {
-        background: white;
-        color: #495057;
+    }    .status-select option {
+        background: var(--surface);
+        color: var(--text-secondary);
         padding: 10px;
     }
 
@@ -92,11 +90,9 @@ require 'includes/header.php';
 
     .status-badge i {
         font-size: 0.5rem;
-    }
-
-    .status-badge.status-pending i { color: #ffc107; }
-    .status-badge.status-approved i { color: #28a745; }
-    .status-badge.status-rejected i { color: #dc3545; }
+    }    .status-badge.status-pending i { color: var(--warning); }
+    .status-badge.status-approved i { color: var(--success); }
+    .status-badge.status-rejected i { color: var(--danger); }
 
     .profile-header {
         background: var(--primary-gradient);
@@ -128,18 +124,14 @@ require 'includes/header.php';
 
     .detail-section:last-child {
         border-bottom: none;
-    }
-
-    .detail-label {
-        color: #6c757d;
+    }    .detail-label {
+        color: var(--text-muted);
         font-size: 0.875rem;
         font-weight: 500;
         margin-bottom: 0.25rem;
-    }
-
-    .detail-value {
+    }    .detail-value {
         font-size: 1rem;
-        color: #212529;
+        color: var(--text-primary);
     }
 
     .comments-section {

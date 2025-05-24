@@ -72,11 +72,10 @@ require 'includes/header.php';
         position: relative;
         z-index: 1;
     }
-    
-    .stats-card:nth-child(1) .stats-icon { color: #4361ee; }
-    .stats-card:nth-child(2) .stats-icon { color: #f7b731; }
-    .stats-card:nth-child(3) .stats-icon { color: #2ecc71; }
-    .stats-card:nth-child(4) .stats-icon { color: #e74c3c; }
+      .stats-card:nth-child(1) .stats-icon { color: var(--primary); }
+    .stats-card:nth-child(2) .stats-icon { color: var(--warning); }
+    .stats-card:nth-child(3) .stats-icon { color: var(--success); }
+    .stats-card:nth-child(4) .stats-icon { color: var(--danger); }
     
     .stats-icon::after {
         content: '';
@@ -102,8 +101,7 @@ require 'includes/header.php';
         width: 48px;
         height: 48px;
         object-fit: cover;
-        border-radius: 50%;
-        border: 2px solid #fff;
+        border-radius: 50%;        border: 2px solid var(--surface);
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         transition: opacity 0.3s ease-in-out;
     }
@@ -119,20 +117,17 @@ require 'includes/header.php';
     .registration-row {
         transition: background-color 0.3s;
     }
-    
-    .registration-row:hover {
-        background-color: rgba(111, 134, 214, 0.05);
-    }
-      .comment-area {
-        background: #f8f9fa;
+      .registration-row:hover {
+        background-color: rgba(139, 69, 19, 0.05);
+    }    .comment-area {
+        background: var(--surface-soft);
         border-radius: 10px;
         padding: 1rem;
         margin-top: 1rem;
         transition: all 0.3s ease;
     }
-    
-    .comment-bubble {
-        background: #fff;
+      .comment-bubble {
+        background: var(--surface);
         border-radius: 15px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         margin-bottom: 0.5rem;
@@ -166,9 +161,8 @@ require 'includes/header.php';
         min-height: 200px;
         height: auto;
     }
-    
-    .comment-area textarea:focus {
-        box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+      .comment-area textarea:focus {
+        box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
         border-color: var(--primary);
     }
 
@@ -192,18 +186,17 @@ require 'includes/header.php';
         padding: 0.5rem 1rem;
         border-radius: 50px;
     }
-    
-    .mobile-menu {
+      .mobile-menu {
         position: fixed;
         bottom: 0;
         left: 0;
         right: 0;
-        background: #fff;
+        background: var(--surface);
         box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
         z-index: 1000;
         display: none;
         padding: 0.5rem;
-    }    @media (max-width: 768px) {
+    }@media (max-width: 768px) {
         .stats-card {
             margin-bottom: 0.5rem;
         }
@@ -247,12 +240,11 @@ require 'includes/header.php';
         .main-container {
             padding-bottom: 70px;
         }
-        
-        .comment-area {
+          .comment-area {
             margin: 0.5rem -1rem;
             padding: 0.75rem;
             border-radius: 0;
-            background: #fff;
+            background: var(--surface);
             box-shadow: 0 -1px 3px rgba(0,0,0,0.1);
         }
         
@@ -272,21 +264,20 @@ require 'includes/header.php';
             font-size: 0.875rem;
         }
     }
-    
-    /* Status Colors */
+      /* Status Colors */
     .status-pending {
-        background-color: #fff3cd;
-        color: #856404;
+        background-color: var(--warning-light);
+        color: var(--warning);
     }
     
     .status-approved {
-        background-color: #d4edda;
-        color: #155724;
+        background-color: var(--success-light);
+        color: var(--success);
     }
     
     .status-rejected {
-        background-color: #f8d7da;
-        color: #721c24;
+        background-color: var(--danger-light);
+        color: var(--danger);
     }
 </style>    <script>
     // Debounce function to limit API calls
