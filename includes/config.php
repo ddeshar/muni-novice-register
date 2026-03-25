@@ -8,6 +8,7 @@ function loadEnv($path) {
     $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     foreach ($lines as $line) {
         if (strpos($line, '#') === 0) continue;
+        if (strpos($line, '=') === false) continue;
         
         list($name, $value) = explode('=', $line, 2);
         $name = trim($name);
@@ -19,6 +20,15 @@ function loadEnv($path) {
             $_SERVER[$name] = $value;
         }
     }
+}
+
+function env_value($key, $default = '')
+{
+    $value = getenv($key);
+    if ($value === false || $value === null || $value === '') {
+        return $default;
+    }
+    return $value;
 }
 
 // Load .env from src directory
@@ -35,7 +45,7 @@ if (!$envLoaded) {
 }
 
 // Determine environment
-define('ENVIRONMENT', getenv('ENVIRONMENT') ?: 'production');
+define('ENVIRONMENT', env_value('ENVIRONMENT', 'production'));
 
 // Set error reporting based on environment
 if (ENVIRONMENT === 'development') {
@@ -47,16 +57,29 @@ if (ENVIRONMENT === 'development') {
 }
 
 // Database configuration
-define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
-define('DB_USER', getenv('DB_USER') ?: 'reguser');
-define('DB_PASSWORD', getenv('DB_PASSWORD') ?: '');
-define('DB_NAME', getenv('DB_NAME') ?: 'registration');
+define('DB_HOST', env_value('DB_HOST', 'localhost'));
+define('DB_USER', env_value('DB_USER', 'reguser'));
+define('DB_PASSWORD', env_value('DB_PASSWORD', ''));
+define('DB_NAME', env_value('DB_NAME', 'registration'));
+define('ADMIN_LOGIN_PATH', env_value('ADMIN_LOGIN_PATH', 'admin_access_7f3k.php'));
+
+$configuredSecret = env_value('APP_SECRET', '');
+if ($configuredSecret === '') {
+    $configuredSecret = hash('sha256', __FILE__ . '|' . DB_HOST . '|' . DB_USER . '|' . DB_NAME);
+    error_log('APP_SECRET is not set. Using derived fallback secret. Set APP_SECRET explicitly in production.');
+}
+define('APP_SECRET', $configuredSecret);
+
+// Telegram notifications
+define('TELEGRAM_BOT_TOKEN', env_value('TELEGRAM_BOT_TOKEN', ''));
+define('TELEGRAM_CHAT_ID', env_value('TELEGRAM_CHAT_ID', ''));
 
 // Security configuration
 define('SESSION_LIFETIME', 7200); // 2 hours
 ini_set('session.gc_maxlifetime', SESSION_LIFETIME);
 ini_set('session.cookie_lifetime', SESSION_LIFETIME);
-ini_set('session.cookie_secure', 1);
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? null) == 443);
+ini_set('session.cookie_secure', $isHttps ? '1' : '0');
 ini_set('session.cookie_httponly', 1);
 ini_set('session.use_strict_mode', 1);
 

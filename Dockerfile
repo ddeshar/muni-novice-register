@@ -1,7 +1,4 @@
-FROM php:8.2-apache
-
-# Ensure all packages are up-to-date to reduce vulnerabilities
-RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
+FROM php:8.3-apache
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -20,17 +17,10 @@ RUN docker-php-ext-install \
     gd \
     zip
 
-# Configure PHP for development
-RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini" && \
-    echo "opcache.enable=0" >> "$PHP_INI_DIR/php.ini" && \
-    echo "error_reporting=E_ALL" >> "$PHP_INI_DIR/php.ini" && \
-    echo "display_errors=1" >> "$PHP_INI_DIR/php.ini" && \
-    echo "display_startup_errors=1" >> "$PHP_INI_DIR/php.ini"
-
 # Enable Apache modules
 RUN a2enmod rewrite headers expires deflate
 
-# Configure Apache and PHP for performance
+# Configure PHP for production
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
     && echo "opcache.enable=1" >> "$PHP_INI_DIR/php.ini" \
     && echo "opcache.memory_consumption=128" >> "$PHP_INI_DIR/php.ini" \
@@ -38,6 +28,7 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
     && echo "opcache.max_accelerated_files=4000" >> "$PHP_INI_DIR/php.ini" \
     && echo "opcache.revalidate_freq=60" >> "$PHP_INI_DIR/php.ini" \
     && echo "opcache.fast_shutdown=1" >> "$PHP_INI_DIR/php.ini" \
+    && echo "expose_php=0" >> "$PHP_INI_DIR/php.ini" \
     && sed -i 's/upload_max_filesize = 2M/upload_max_filesize = 10M/' "$PHP_INI_DIR/php.ini" \
     && sed -i 's/post_max_size = 8M/post_max_size = 10M/' "$PHP_INI_DIR/php.ini" \
     && sed -i 's/memory_limit = 128M/memory_limit = 256M/' "$PHP_INI_DIR/php.ini"
@@ -47,7 +38,7 @@ RUN mkdir -p /var/www/html/uploads \
     && chown -R www-data:www-data /var/www/html
 
 # Copy application files
-COPY src/ /var/www/html/
+COPY . /var/www/html/
 
 # Set proper permissions
 RUN chown -R www-data:www-data /var/www/html \

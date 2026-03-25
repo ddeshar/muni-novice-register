@@ -5,16 +5,68 @@ require 'includes/security.php';
 $message = "";
 $upload_error = "";
 
+function old_value($key)
+{
+    return htmlspecialchars($_POST[$key] ?? '', ENT_QUOTES, 'UTF-8');
+}
+
+function export_token_for_id($id)
+{
+    return hash_hmac('sha256', (string)$id, APP_SECRET);
+}
+
+function send_telegram_notification($text)
+{
+    if (TELEGRAM_BOT_TOKEN === '' || TELEGRAM_CHAT_ID === '') {
+        return false;
+    }
+
+    $url = 'https://api.telegram.org/bot' . TELEGRAM_BOT_TOKEN . '/sendMessage';
+
+    $payload = [
+        'chat_id' => TELEGRAM_CHAT_ID,
+        'text' => $text,
+        'parse_mode' => 'HTML'
+    ];
+
+    if (function_exists('curl_init')) {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 8,
+            CURLOPT_POSTFIELDS => http_build_query($payload)
+        ]);
+        $response = curl_exec($ch);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($error) {
+            error_log('Telegram send failed: ' . $error);
+            return false;
+        }
+
+        return is_string($response) && strpos($response, '"ok":true') !== false;
+    }
+
+    // Fallback for shared hosting without cURL extension.
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'POST',
+            'header' => "Content-Type: application/x-www-form-urlencoded\r\n",
+            'content' => http_build_query($payload),
+            'timeout' => 8
+        ]
+    ]);
+    $response = @file_get_contents($url, false, $context);
+    return is_string($response) && strpos($response, '"ok":true') !== false;
+}
+
 // Check for database connection error
 if (isset($_SESSION['db_error'])) {
     $message = $_SESSION['db_error'];
     unset($_SESSION['db_error']);
 }
-
-// Debug: Log session data at the start
-error_log("Session data at start: " . print_r($_SESSION, true));
-error_log("POST data: " . print_r($_POST, true));
-error_log("GET data: " . print_r($_GET, true));
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Verify CSRF token
@@ -27,8 +79,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $message = "Too many registration attempts. Please try again in a few minutes.";
         http_response_code(429);
     } else {
-        error_log("Form submission started");
-
         $name = htmlspecialchars(trim($_POST['name'] ?? ''));
         $dob = htmlspecialchars(trim($_POST['dob'] ?? ''));
         $passed_class = htmlspecialchars(trim($_POST['passed_class'] ?? ''));
@@ -61,11 +111,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         if (!empty($missing_fields)) {
             $message = "Error: Please fill in all required fields: " . implode(', ', $missing_fields);
-            error_log("Missing required fields: " . implode(', ', $missing_fields));
+        }
+
+        if (empty($message) && !preg_match('/^\\d{10}$/', $phone)) {
+            $message = "Error: Please enter a valid 10-digit mobile number.";
+        }
+
+        if (empty($message) && (!isset($_FILES['photo']) || $_FILES['photo']['error'] === UPLOAD_ERR_NO_FILE)) {
+            $upload_error = "Photo is mandatory. Please upload a valid image under 5MB.";
         }
 
         // Handle photo upload using secure file upload function
-        if (empty($message) && isset($_FILES['photo'])) {
+        if (empty($message) && !$upload_error && isset($_FILES['photo'])) {
             try {
                 $target_dir = "uploads/";
                 if (!is_dir($target_dir)) {
@@ -87,7 +144,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
             } catch (RuntimeException $e) {
                 $upload_error = $e->getMessage();
-                error_log("Photo upload error: " . $e->getMessage());
             }
         } else if (isset($_FILES['photo']) && $_FILES['photo']['error'] != UPLOAD_ERR_NO_FILE) {
             $error_codes = [
@@ -101,7 +157,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             ];
             $error_code = $_FILES['photo']['error'];
             $upload_error = isset($error_codes[$error_code]) ? $error_codes[$error_code] : "Unknown upload error.";
-            error_log("Photo upload error: " . $upload_error);
         }
 
         // Continue with database insertion if no errors
@@ -149,6 +204,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     ];
                     $_SESSION['message'] = "success";
 
+                    $telegram_text =
+                        "<b>नयाँ दर्ता प्राप्त भयो</b>\n" .
+                        "ID: #" . $reg_id . "\n" .
+                        "नाम: " . $name . "\n" .
+                        "मोबाइल: " . $phone . "\n" .
+                        "कक्षा: " . $passed_class . "\n" .
+                        "विद्यालय: " . $school_name;
+
+                    send_telegram_notification($telegram_text);
+
                     // Close database connection before redirect
                     if (isset($stmt)) {
                         $stmt->close();
@@ -159,8 +224,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     session_write_close();
 
                     // Debug info
-                    error_log("Form submitted successfully. Redirecting to success page.");
-
                     // Redirect to success page with a parameter to avoid caching issues
                     header("Location: index.php?registration=success");
                     exit();
@@ -169,15 +232,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
             } catch (Exception $e) {
                 error_log("Registration error: " . $e->getMessage());
-                $message = "Error: Unable to complete registration. Please try again. (" . $e->getMessage() . ")";
+                $message = "Error: Unable to complete registration. Please try again.";
             } finally {
                 if (isset($stmt) && $stmt instanceof mysqli_stmt) {
                     $stmt->close();
                 }
             }
         } else {
-            $message = "Error: " . ($upload_error ?: $message);
-            error_log("Form submission failed: " . $message);
+            if ($upload_error && empty($message)) {
+                $message = "Error: " . $upload_error;
+            }
         }
     }
 }
@@ -540,15 +604,22 @@ require 'includes/header.php';
                 // Check basic validation
                 var isValid = form.checkValidity();
                 var consentChecked = document.getElementById('consent').checked;
+                var photoInput = form.querySelector('input[name="photo"]');
+                var hasPhoto = photoInput && photoInput.files && photoInput.files.length > 0;
 
-                if (!isValid || !consentChecked) {
+                if (!isValid || !consentChecked || !hasPhoto) {
                     console.log('Form validation failed:', {
                         isValid: isValid,
-                        consentChecked: consentChecked
+                        consentChecked: consentChecked,
+                        hasPhoto: hasPhoto
                     });
                     event.preventDefault();
                     event.stopPropagation();
-                    alert('कृपया सबै आवश्यक फिल्डहरू भर्नुहोस् र सहमति चेकबक्समा टिक गर्नुहोस्।');
+                    if (!hasPhoto) {
+                        alert('कृपया फोटो अनिवार्य रूपमा अपलोड गर्नुहोस्।');
+                    } else {
+                        alert('कृपया सबै आवश्यक फिल्डहरू भर्नुहोस् र सहमति चेकबक्समा टिक गर्नुहोस्।');
+                    }
                 } else {
                     console.log('Form validation passed, submitting...');
                     // Show loading indicator
@@ -803,9 +874,15 @@ require 'includes/header.php';
                                 <a href="index.php" class="btn btn-primary btn-lg me-2 px-4 py-2">
                                     <i class="bi bi-plus-circle"></i> नयाँ दर्ता
                                 </a>
+                                <a href="export_registration_pdf.php?id=<?php echo (int)$_SESSION['registration_data']['id']; ?>&token=<?php echo export_token_for_id((int)$_SESSION['registration_data']['id']); ?>" class="btn btn-outline-secondary btn-lg me-2 px-4 py-2" target="_blank" rel="noopener">
+                                    <i class="bi bi-file-earmark-pdf"></i> PDF Export
+                                </a>
                                 <button onclick="window.print()" class="btn btn-outline-primary btn-lg px-4 py-2">
                                     <i class="bi bi-printer"></i> विवरण प्रिन्ट गर्नुहोस्
                                 </button>
+                            </div>
+                            <div class="alert alert-info mt-4 mb-0" role="alert" style="line-height:1.7;">
+                                हाम्रो टिमले तपाईंले प्रदान गर्नुभएको मोबाइल नम्बरमा छिट्टै सम्पर्क गर्नेछ। कृपया आफ्नो फोन उपलब्ध राख्नुहोस्।
                             </div>
                         </div>
                         <!-- 
@@ -910,13 +987,6 @@ require 'includes/header.php';
                         </div>
                     <?php endif; ?>
 
-                    <?php if ($upload_error): ?>
-                        <div class='alert alert-danger alert-dismissible fade show' role='alert'>
-                            <?php echo htmlspecialchars($upload_error); ?>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    <?php endif; ?>
-
                     <form method="POST" enctype="multipart/form-data" class="needs-validation row g-4" novalidate>
                         <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                         <div class="col-md-6 text-center mb-4">
@@ -940,13 +1010,14 @@ require 'includes/header.php';
 
                         <div class="col-md-6">
                             <div class="form-floating mb-3">
-                                <input type="text" name="name" class="form-control custom-input" id="name" placeholder="Full Name" required>
+                                <input type="text" name="name" class="form-control custom-input" id="name" placeholder="Full Name" value="<?php echo old_value('name'); ?>" required>
                                 <label for="name"><i class="bi bi-person"></i> पुरा नाम</label>
                             </div>
                             <div class="form-floating mb-3">
                                 <input type="date" name="dob" class="form-control custom-input" id="dob"
                                     max=""
                                     onchange="validateAge(this)"
+                                    value="<?php echo old_value('dob'); ?>"
                                     required>
                                 <label for="dob"><i class="bi bi-calendar3"></i> जन्म मिति</label>
                                 <div class="invalid-feedback">उमेर ११ वर्ष भन्दा माथि हुनुपर्छ</div>
@@ -956,7 +1027,7 @@ require 'includes/header.php';
                                     pattern="[0-9]{10}" maxlength="10"
                                     oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                     onkeypress="return event.charCode >= 48 && event.charCode <= 57"
-                                    placeholder="Mobile Number" required>
+                                    placeholder="Mobile Number" value="<?php echo old_value('phone'); ?>" required>
                                 <label for="phone"><i class="bi bi-phone"></i> मोबाइल नम्बर</label>
                                 <div class="invalid-feedback">१० अङ्कको मोबाइल नम्बर लेख्नुहोस्</div>
                                 <div class="form-text">Enter 10-digit mobile number (numbers only)</div>
@@ -970,14 +1041,14 @@ require 'includes/header.php';
 
                         <div class="col-md-6">
                             <div class="form-floating">
-                                <input type="text" name="school_name" class="form-control custom-input" id="school" required>
+                                <input type="text" name="school_name" class="form-control custom-input" id="school" value="<?php echo old_value('school_name'); ?>" required>
                                 <label for="school"><i class="bi bi-building"></i> विद्यालयको नाम</label>
                             </div>
                         </div>
 
                         <div class="col-md-6">
                             <div class="form-floating">
-                                <input type="text" name="passed_class" class="form-control custom-input" id="class" required>
+                                <input type="text" name="passed_class" class="form-control custom-input" id="class" value="<?php echo old_value('passed_class'); ?>" required>
                                 <label for="class"><i class="bi bi-mortarboard"></i> उत्तीर्ण कक्षा</label>
                             </div>
                         </div>
@@ -988,14 +1059,14 @@ require 'includes/header.php';
 
                         <div class="col-md-6">
                             <div class="form-floating">
-                                <input type="text" name="father_name" class="form-control custom-input" id="father" required>
+                                <input type="text" name="father_name" class="form-control custom-input" id="father" value="<?php echo old_value('father_name'); ?>" required>
                                 <label for="father"><i class="bi bi-person"></i> बाबुको नाम</label>
                             </div>
                         </div>
 
                         <div class="col-md-6">
                             <div class="form-floating">
-                                <input type="text" name="mother_name" class="form-control custom-input" id="mother" required>
+                                <input type="text" name="mother_name" class="form-control custom-input" id="mother" value="<?php echo old_value('mother_name'); ?>" required>
                                 <label for="mother"><i class="bi bi-person-heart"></i> आमाको नाम</label>
                             </div>
                         </div>
@@ -1008,7 +1079,7 @@ require 'includes/header.php';
                         <div class="col-12">
                             <div class="form-floating mb-3">
                                 <textarea name="permanent_address" class="form-control custom-input" id="permanent_addr"
-                                    style="height: 100px" required></textarea>
+                                    style="height: 100px" required><?php echo old_value('permanent_address'); ?></textarea>
                                 <label for="permanent_addr"><i class="bi bi-house-door"></i> स्थायी ठेगाना</label>
                             </div>
                         </div>
@@ -1016,7 +1087,7 @@ require 'includes/header.php';
                         <div class="col-12">
                             <div class="form-floating mb-3">
                                 <textarea name="temporary_address" class="form-control custom-input" id="temp_addr"
-                                    style="height: 100px"></textarea>
+                                    style="height: 100px"><?php echo old_value('temporary_address'); ?></textarea>
                                 <label for="temp_addr"><i class="bi bi-house"></i> अस्थायी ठेगाना (यदि फरक छ भने)</label>
                             </div>
                         </div>
@@ -1029,6 +1100,12 @@ require 'includes/header.php';
                                     त्यस्तै विहारमा अथवा विहारको बाहिर हुनसक्ने कुनै दुर्घटना अथवा नोक्सानीको म आफै जिम्मेवार हुनेछु<br>
                                     र यसमा मुनि विहार कानूनीरूपले कुनै जवाफदेही नहुने तथ्य स्वीकार गर्दछु। अनुकम्पापूर्वक मलाई प्रब्रज्या दिनुहोस्।
                                 </label>
+                            </div>
+                            <div class="mt-3 pt-3 border-top">
+                                <p class="mb-0" style="line-height: 1.8; color: var(--text-secondary); font-size: 0.95rem;">
+                                    जन्मदर्ताको प्रमाणपत्र, विद्यालयको प्रमाणपत्र, मार्कशीट, स्थनान्तरणपत्र,
+                                    माता पितासँग नाता प्रमाणपत्र जस्ता महत्त्वपूर्ण कागजातहरू पनि साथमा ल्याउनु होला ।
+                                </p>
                             </div>
                         </div>
 

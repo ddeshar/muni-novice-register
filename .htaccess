@@ -43,9 +43,15 @@
         Header set Cache-Control "public, max-age=31536000"
     </FilesMatch>
     
-    # Cache HTML and PHP files for 2 hours
-    <FilesMatch "\.(html|php)$">
+    # Cache HTML files for 2 hours
+    <FilesMatch "\.html$">
         Header set Cache-Control "public, must-revalidate, max-age=7200"
+    </FilesMatch>
+
+    # Never cache dynamic PHP responses
+    <FilesMatch "\.php$">
+        Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+        Header set Pragma "no-cache"
     </FilesMatch>
 </IfModule>
 
@@ -53,10 +59,6 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
-    
-    # Redirect HTTP to HTTPS
-    RewriteCond %{HTTPS} off
-    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
     
     # Protect sensitive files
     RewriteRule ^\.env - [F,L]
@@ -71,10 +73,9 @@
 # Disable directory listing
 Options -Indexes
 
-# Protect files and directories
+# Protect hidden files
 <FilesMatch "^\.">
-    Order allow,deny
-    Deny from all
+    Require all denied
 </FilesMatch>
 
 # PHP settings

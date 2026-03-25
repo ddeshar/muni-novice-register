@@ -1,11 +1,22 @@
 <?php
 session_start();
 require 'db.php';
+require 'includes/security.php';
 if (!isset($_SESSION['admin'])) exit("Login required.");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        http_response_code(403);
+        exit('CSRF token validation failed');
+    }
+
     $reg_id = intval($_POST['reg_id']);
     $comment = trim($_POST['comment']);
+
+    if ($reg_id <= 0 || $comment === '') {
+        http_response_code(400);
+        exit('Invalid comment payload');
+    }
 
     if (isset($_POST['edit_id'])) {
         // Edit existing comment
@@ -35,7 +46,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             echo "<div class='text-muted small mb-1'>" . date('M j, Y g:i A', strtotime($row['created_at'])) . "</div>";
             echo "<div>" . nl2br(htmlspecialchars($row['comment'])) . "</div>";
             echo "</div>";
-            echo "<button onclick='editComment({$reg_id}, {$row['id']}, `" . htmlspecialchars(addslashes($row['comment'])) . "`)' 
+                echo "<button onclick='editComment({$reg_id}, {$row['id']}, this.dataset.comment)' 
+                    data-comment='" . htmlspecialchars($row['comment'], ENT_QUOTES, 'UTF-8') . "'
                     class='btn btn-link btn-sm text-muted p-0 ms-2'>
                     <i class='bi bi-pencil'></i>
                 </button>";
@@ -75,7 +87,8 @@ while ($row = $result->fetch_assoc()) {
     echo "<div class='text-muted small mb-1'>" . date('M j, Y g:i A', strtotime($row['created_at'])) . "</div>";
     echo "<div>" . nl2br(htmlspecialchars($row['comment'])) . "</div>";
     echo "</div>";
-    echo "<button onclick='editComment({$reg_id}, {$row['id']}, `" . htmlspecialchars(addslashes($row['comment'])) . "`)' 
+    echo "<button onclick='editComment({$reg_id}, {$row['id']}, this.dataset.comment)' 
+              data-comment='" . htmlspecialchars($row['comment'], ENT_QUOTES, 'UTF-8') . "'
               class='btn btn-link btn-sm text-muted p-0 ms-2'>
               <i class='bi bi-pencil'></i>
           </button>";

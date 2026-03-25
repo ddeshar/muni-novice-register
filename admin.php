@@ -1,15 +1,28 @@
 <?php
 session_start();
 require 'db.php';
+require 'includes/security.php';
 if (!isset($_SESSION['admin'])) {
-    header("Location: login.php");
+    header("Location: " . ADMIN_LOGIN_PATH);
     exit;
 }
 
 // Status update
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_status'])) {
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        http_response_code(403);
+        exit('CSRF token validation failed');
+    }
+
     $rid = intval($_POST['reg_id']);
-    $status = $_POST['status'];
+    $status = $_POST['status'] ?? '';
+    $allowed_statuses = ['Pending', 'Approved', 'Rejected'];
+
+    if (!in_array($status, $allowed_statuses, true)) {
+        http_response_code(400);
+        exit('Invalid status');
+    }
+
     $stmt = $conn->prepare("UPDATE registrations SET status=? WHERE id=?");
     $stmt->bind_param("si", $status, $rid);
     $stmt->execute();
@@ -887,6 +900,8 @@ require 'includes/header.php';
 </style>
 
 <script>
+    const csrfToken = "<?= htmlspecialchars(generate_csrf_token(), ENT_QUOTES, 'UTF-8') ?>";
+
     // Debounce function to limit API calls
     function debounce(func, wait) {
         let timeout;
@@ -940,6 +955,7 @@ require 'includes/header.php';
         const formData = new FormData();
         formData.append('reg_id', id);
         formData.append('comment', comment);
+        formData.append('csrf_token', csrfToken);
 
         fetch('comment.php', {
                 method: 'POST',
@@ -976,6 +992,7 @@ require 'includes/header.php';
         formData.append('reg_id', regId);
         formData.append('edit_id', commentId);
         formData.append('comment', newComment);
+        formData.append('csrf_token', csrfToken);
 
         fetch('comment.php', {
                 method: 'POST',
@@ -1274,6 +1291,7 @@ require 'includes/header.php';
                                     <form method="POST" class="status-form">
                                         <input type="hidden" name="reg_id" value="<?= $row['id'] ?>">
                                         <input type="hidden" name="update_status" value="1">
+                                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
                                         <div class="status-select-wrapper">
                                             <select name="status" class="form-select form-select-sm status-select"
                                                 onchange="updateStatus(this)" data-id="<?= $row['id'] ?>">
@@ -1294,6 +1312,12 @@ require 'includes/header.php';
                                         class="btn btn-outline-primary btn-sm action-btn">
                                         <i class="bi bi-eye"></i>
                                         <span class="btn-text">View Details</span>
+                                    </a>
+                                    <a href="export_registration_pdf.php?id=<?= $row['id'] ?>"
+                                        class="btn btn-outline-secondary btn-sm action-btn"
+                                        target="_blank" rel="noopener">
+                                        <i class="bi bi-file-earmark-pdf"></i>
+                                        <span class="btn-text">Export PDF</span>
                                     </a>
                                 </div>
                             </td>

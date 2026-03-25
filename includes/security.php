@@ -20,11 +20,7 @@ function generate_csrf_token()
  */
 function verify_csrf_token($token)
 {
-    if (!isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
-        http_response_code(403);
-        die('CSRF token validation failed');
-    }
-    return true;
+    return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], (string)$token);
 }
 
 /**
@@ -93,7 +89,12 @@ function validate_file_upload($file, $allowed_types = ['image/jpeg', 'image/png'
     $extension = array_search($mime_type, [
         'jpg' => 'image/jpeg',
         'png' => 'image/png',
+        'gif' => 'image/gif',
     ], true);
+
+    if ($extension === false) {
+        throw new RuntimeException('Invalid file extension.');
+    }
 
     return [
         'extension' => $extension,

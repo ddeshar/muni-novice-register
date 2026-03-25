@@ -1,8 +1,9 @@
 <?php
 session_start();
 require 'db.php';
+require 'includes/security.php';
 if (!isset($_SESSION['admin'])) {
-    header("Location: login.php");
+    header("Location: " . ADMIN_LOGIN_PATH);
     exit;
 }
 
@@ -25,7 +26,18 @@ if (!$user) {
 
 // Handle status update
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_status'])) {
-    $status = $_POST['status'];
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        http_response_code(403);
+        exit('CSRF token validation failed');
+    }
+
+    $status = $_POST['status'] ?? '';
+    $allowed_statuses = ['Pending', 'Approved', 'Rejected'];
+    if (!in_array($status, $allowed_statuses, true)) {
+        http_response_code(400);
+        exit('Invalid status');
+    }
+
     $stmt = $conn->prepare("UPDATE registrations SET status=? WHERE id=?");
     $stmt->bind_param("si", $status, $id);
     $stmt->execute();
@@ -558,6 +570,7 @@ require 'includes/header.php';
                                             <option value="Rejected" <?= $user['status'] == 'Rejected' ? 'selected' : '' ?>>Rejected</option>
                                         </select>
                                         <input type="hidden" name="update_status" value="1">
+                                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
                                     </form>
                                 </div>
                             </div>
@@ -724,6 +737,9 @@ require 'includes/header.php';
                                 <a href="admin.php" class="btn btn-primary btn-lg me-2 px-4 py-2">
                                     <i class="bi bi-arrow-left"></i> बाकसमा जानुहोस्
                                 </a>
+                                <a href="export_registration_pdf.php?id=<?= $user['id'] ?>" class="btn btn-outline-secondary btn-lg me-2 px-4 py-2" target="_blank" rel="noopener">
+                                    <i class="bi bi-file-earmark-pdf"></i> PDF Export
+                                </a>
                                 <button onclick="window.print()" class="btn btn-outline-primary btn-lg px-4 py-2">
                                     <i class="bi bi-printer"></i> विवरण प्रिन्ट गर्नुहोस्
                                 </button>
@@ -763,6 +779,8 @@ require 'includes/header.php';
 </main>
 
 <script>
+    const csrfToken = "<?= htmlspecialchars(generate_csrf_token(), ENT_QUOTES, 'UTF-8') ?>";
+
     document.addEventListener('DOMContentLoaded', function() {
         // Load comments immediately
         showComments(<?= $user['id'] ?>);
@@ -803,6 +821,7 @@ require 'includes/header.php';
         const data = new FormData();
         data.append('reg_id', id);
         data.append('comment', comment);
+        data.append('csrf_token', csrfToken);
 
         if (editId.value) {
             data.append('edit_id', editId.value);

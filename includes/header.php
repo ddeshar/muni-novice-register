@@ -1,5 +1,6 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);
+$admin_login_page = basename(defined('ADMIN_LOGIN_PATH') ? ADMIN_LOGIN_PATH : 'admin_access_7f3k.php');
 
 // Security Headers
 header("Content-Security-Policy: default-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https://cdn.jsdelivr.net");
@@ -13,7 +14,7 @@ header("X-XSS-Protection: 1; mode=block");
 $meta_descriptions = [
     'index.php' => 'भिक्षु अध्ययन कार्यक्रम दर्ता फारम - Register for Buddhist Study Program at Muni Vihar. Complete online registration for Buddhist studies.',
     'admin.php' => 'Muni Vihar Registration System Admin Dashboard - Manage student registrations and program details',
-    'login.php' => 'Admin Login - Secure access to Muni Vihar Registration System'
+    $admin_login_page => 'Admin Login - Secure access to Muni Vihar Registration System'
 ];
 
 $meta_description = $meta_descriptions[$current_page] ?? "Muni Vihar Buddhist Study Program - Online Registration System";
@@ -33,7 +34,7 @@ $meta_description = $meta_descriptions[$current_page] ?? "Muni Vihar Buddhist St
                 case 'admin.php':
                     echo "Admin Dashboard - Muni Vihar Registration Management";
                     break;
-                case 'login.php':
+                case $admin_login_page:
                     echo "Admin Login - Muni Vihar Registration System";
                     break;
                 default:
