@@ -76,13 +76,6 @@ define('TELEGRAM_CHAT_ID', env_value('TELEGRAM_CHAT_ID', ''));
 
 // Security configuration
 define('SESSION_LIFETIME', 7200); // 2 hours
-ini_set('session.gc_maxlifetime', SESSION_LIFETIME);
-ini_set('session.cookie_lifetime', SESSION_LIFETIME);
-$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? null) == 443);
-ini_set('session.cookie_secure', $isHttps ? '1' : '0');
-ini_set('session.cookie_httponly', 1);
-ini_set('session.use_strict_mode', 1);
-
 // Upload configuration
 define('UPLOAD_MAX_SIZE', 10 * 1024 * 1024); // 10MB
 define('ALLOWED_MIME_TYPES', ['image/jpeg', 'image/png']);

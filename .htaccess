@@ -55,6 +55,11 @@
     </FilesMatch>
 </IfModule>
 
+# Disable LiteSpeed server-side page cache for PHP files
+<IfModule LiteSpeed>
+    CacheLookup off
+</IfModule>
+
 # Rewrite rules
 <IfModule mod_rewrite.c>
     RewriteEngine On

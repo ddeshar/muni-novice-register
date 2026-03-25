@@ -1,6 +1,21 @@
 <?php
-session_start();
 require_once __DIR__ . '/includes/config.php';
+
+// Set session parameters BEFORE session_start() so they take effect
+$_isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+          || (($_SERVER['SERVER_PORT'] ?? null) == 443)
+          || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+ini_set('session.gc_maxlifetime', SESSION_LIFETIME);
+ini_set('session.cookie_lifetime', SESSION_LIFETIME);
+ini_set('session.cookie_secure', $_isHttps ? '1' : '0');
+ini_set('session.cookie_httponly', '1');
+ini_set('session.use_strict_mode', '1');
+ini_set('session.cookie_samesite', 'Lax');
+unset($_isHttps);
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 $host = DB_HOST;
 $user = DB_USER;
